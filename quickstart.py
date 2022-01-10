@@ -39,7 +39,7 @@ def refreshToken(client_id, client_secret, refresh_token):
 
 emails = ["sathvik.s@grexit.com", "vani.g@grexit.com","vishnuerapalli01@gmail.com","sathviksaya@gmail.com"]
 
-sath_token={'token': 'ya29.A0ARrdaM-kdg06brg-N2oDyVl4M0HmAel08CtqT0t058bUH_4S3rqzosxufU-XYePp5y9hvvFML3KBxJeANg5N364I-d6v97_fgQiSl6iqbBXCpfhv2t0PaFewElViJ5D7_-KfATMvVgy5dvmytqvg4EiGldf8qA', 'refresh_token': None, 'token_uri': 'https://oauth2.googleapis.com/token', 'client_id': '1036067471598-mqt6v2j085vve462skcl1pbj80d9055e.apps.googleusercontent.com', 'client_secret': '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', 'scopes': ['https://www.googleapis.com/auth/gmail.readonly', 'https://www.googleapis.com/auth/userinfo.profile', 'https://mail.google.com/', 'https://www.googleapis.com/auth/userinfo.email', 'openid']}
+# sath_token={'token': 'ya29.A0ARrda  XYePp5y9hvvFML3KBxJeANg5N364I-d6v97_fgQiSl6iqbBXCpfhv2t0PaFewElViJ5D7_-KfATMvVgy5dvmytqvg4EiGldf8qA', 'refresh_token': None, 'token_uri': 'https://oauth2.googleapis.com/token', 'client_id': '1036067471598-mqt6v2j085vve462skcl1pbj80d9055e.apps.googleusercontent.com', 'client_secret': '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', 'scopes': ['https://www.googleapis.com/auth/gmail.readonly', 'https://www.googleapis.com/auth/userinfo.profile', 'https://mail.google.com/', 'https://www.googleapis.com/auth/userinfo.email', 'openid']}
 @app.route('/')
 def index():
   return render_template("login.html")
@@ -56,11 +56,11 @@ def test_api_request():
   gmail = googleapiclient.discovery.build(
       "gmail", "v1", credentials=credentials)
   
-  credentials1 = google.oauth2.credentials.Credentials(**sath_token)
-  gmail1 = googleapiclient.discovery.build("gmail", "v1", credentials=credentials1)
+  # credentials1 = google.oauth2.credentials.Credentials(**sath_token)
+  # gmail1 = googleapiclient.discovery.build("gmail", "v1", credentials=credentials1)
 
   files = gmail.users().threads().list(userId='me').execute()
-  files1 = gmail1.users().threads().list(userId='me').execute()
+  # files1 = gmail1.users().threads().list(userId='me').execute()
   
 
   # Save credentials back to session in case access token was refreshed.
@@ -86,12 +86,12 @@ def test_api_request():
       
       for mId in rawData["messages"]:
         rawMessage = gmail.users().messages().get(userId="me", id=mId["id"], format="raw").execute()
-        resInsert = gmail1.users().messages().insert(
-          userId="me", 
-          body={
-            "id":mId["id"],
-            "raw":rawMessage["raw"]
-          }).execute()
+        # resInsert = gmail1.users().messages().insert(
+        #   userId="me", 
+        #   body={
+        #     "id":mId["id"],
+        #     "raw":rawMessage["raw"]
+        #   }).execute()
 
   return flask.jsonify(**files)
   '''
