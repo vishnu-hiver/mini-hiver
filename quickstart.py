@@ -2,6 +2,8 @@ import os
 import flask
 from flask import render_template
 import requests
+import snowflake.connector
+import json
 
 import google.oauth2.credentials
 import google_auth_oauthlib.flow
@@ -16,6 +18,15 @@ CLIENT_SECRETS_FILE = "client_secret.json"
 SCOPES = ["https://www.googleapis.com/auth/gmail.readonly", "https://www.googleapis.com/auth/userinfo.profile", "https://mail.google.com/", "https://www.googleapis.com/auth/userinfo.email", "openid"]
 API_SERVICE_NAME = 'gmail'
 API_VERSION = 'v1'
+
+# ------- Snowflake credentials -------- #
+ctx = snowflake.connector.connect(
+    user='vanigupta69',
+    password='Vanigupta@123',
+    account='tw24335.us-central1.gcp',
+    database='CREDENTIALS'
+)
+
 
 app = flask.Flask(__name__)
 # Note: A secret key is included in the sample so that it works.
@@ -183,7 +194,18 @@ def authorize():
 #     'scopes': credentials.scopes}
 
 
+def insert_creds():
+    curr = ctx.cursor()
+    client_secret = json.load(open('client_secret.json'))
+    user_info = json.dumps(client_secret)
+    sql = f"insert into user_info values('{user_info}')"
+    curr.execute(sql)
+    ctx.commit()
 
+def read_creds():
+    curr = ctx.cursor()
+    curr.execute("select * from user_info;")
+    print(curr.fetchall())
 
 
 
