@@ -12,9 +12,13 @@ import google.oauth2.credentials
 import google_auth_oauthlib.flow
 import googleapiclient.discovery
 
+
 # This variable specifies the name of a file that contains the OAuth 2.0
 # information for this application, including its client_id and client_secret.
 CLIENT_SECRETS_FILE = "client_secret.json"
+
+gmailTokens = dict()
+gmailIds = set()
 
 # This OAuth 2.0 access scope allows for full read/write access to the
 # authenticated user's account and requires requests to use an SSL connection.
@@ -51,15 +55,14 @@ def refreshToken(client_id, client_secret, refresh_token):
   else:
     return None
 
-emails = ["sathvik.s@grexit.com", "vani.g@grexit.com","vishnuerapalli01@gmail.com","sathviksaya@gmail.com"]
 
-# sath_token={'client_id': '1036067471598-mqt6v2j085vve462skcl1pbj80d9055e.apps.googleusercontent.com', 'client_secret': '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', 'refresh_token': None, 'scopes': ['https://www.googleapis.com/auth/gmail.readonly', 'https://www.googleapis.com/auth/userinfo.profile', 'https://mail.google.com/', 'https://www.googleapis.com/auth/userinfo.email', 'openid'], 'token': 'ya29.a0ARrdaM-PSvRk5uNZrwEoCoJgSPr1MNxiMBdjE9uHUCnw4kko6R_iyl-Omn1v3Hxx-AvfUm8JDTGsNs7ZsDt9ax03kEHEVdNKN55QcA3qHceQILwV3f0_reA5swd2S_H66nISwiNOOsdZVIg9MeLCndHbDsAoRw', 'token_uri': 'https://oauth2.googleapis.com/token'}
+# Home route to login
 @app.route('/')
 def index():
   return render_template("login.html")
 
 
-@app.route('/test')
+@app.route('/listen')
 def test_api_request():
   if 'credentials' not in flask.session:
     return flask.redirect('authorize')
@@ -72,10 +75,19 @@ def test_api_request():
   gmail = googleapiclient.discovery.build(
       "gmail", "v1", credentials=credentials)
 
-  print(pd.DataFrame(db.read_creds()).drop_duplicates())
+  # for token in db.read_creds():
+  #   tk = json.loads(token[1])
+  #   identifier = tk["client_id"]
+  #   gmailIds.add(identifier)
+  #   gmailTokens[identifier] = googleapiclient.discovery.build("gmail", "v1", credentials=google.oauth2.credentials.Credentials(**tk))
   
-  # credentials1 = google.oauth2.credentials.Credentials(**sath_token)
-  # gmail1 = googleapiclient.discovery.build("gmail", "v1", credentials=credentials1)
+  # print(gmailIds, gmailTokens)
+
+  # for id in gmailIds:
+  #   pMails = gmailTokens[id].users().threads().list(userId="me").execute()
+    
+
+
 
   files = gmail.users().threads().list(userId='me').execute()
   # files1 = gmail1.users().threads().list(userId='me').execute()
@@ -117,7 +129,7 @@ def test_api_request():
         #     "raw":rawMessage["raw"]
         #   }).execute()
 
-  return flask.jsonify(**files)
+  return render_template("listen.html")
   '''
   for message in resDictionary["messages"]:
     print(message.id)'''
