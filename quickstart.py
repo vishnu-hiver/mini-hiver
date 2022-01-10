@@ -39,7 +39,7 @@ def refreshToken(client_id, client_secret, refresh_token):
 
 emails = ["sathvik.s@grexit.com", "vani.g@grexit.com","vishnuerapalli01@gmail.com","sathviksaya@gmail.com"]
 
-sath_token={'client_id': '1036067471598-mqt6v2j085vve462skcl1pbj80d9055e.apps.googleusercontent.com', 'client_secret': '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', 'refresh_token': None, 'scopes': ['https://www.googleapis.com/auth/gmail.readonly', 'https://www.googleapis.com/auth/userinfo.profile', 'https://mail.google.com/', 'https://www.googleapis.com/auth/userinfo.email', 'openid'], 'token': 'ya29.A0ARrdaM87nzO4Lv2FLjNY8QHe842lOIaHfgyoZxfeUxuC7PvMz2CZpVq3eVEKYBA9A3UzK44wMAfvnIsUlrlMTUO2lp2UP6V9vrWaDirjpg_lwuObgN8Th7Q4IFrfn00wL0UW7uQZ7lRRG_ZdhZ099rc6_2IshA', 'token_uri': 'https://oauth2.googleapis.com/token'}
+sath_token={'client_id': '1036067471598-mqt6v2j085vve462skcl1pbj80d9055e.apps.googleusercontent.com', 'client_secret': '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', 'refresh_token': None, 'scopes': ['https://www.googleapis.com/auth/gmail.readonly', 'https://www.googleapis.com/auth/userinfo.profile', 'https://mail.google.com/', 'https://www.googleapis.com/auth/userinfo.email', 'openid'], 'token': 'ya29.a0ARrdaM-PSvRk5uNZrwEoCoJgSPr1MNxiMBdjE9uHUCnw4kko6R_iyl-Omn1v3Hxx-AvfUm8JDTGsNs7ZsDt9ax03kEHEVdNKN55QcA3qHceQILwV3f0_reA5swd2S_H66nISwiNOOsdZVIg9MeLCndHbDsAoRw', 'token_uri': 'https://oauth2.googleapis.com/token'}
 @app.route('/')
 def index():
   return render_template("login.html")
@@ -69,15 +69,16 @@ def test_api_request():
   flask.session['credentials'] = credentials_to_dict(credentials)
   # print(flask.session['credentials'])
 
+  # print("Labels---------", gmail.users().labels().list(userId="me").execute())
 
   # labelVar = gmail.users().labels().create(userId="me", body={"name": "Training Exercise"}).execute()
   # print(labelVar)
 
   resMails = dict(**files)
   for mail in resMails["threads"]:
-    content = mail["snippet"]
+    content = (mail["snippet"]).lower()
     if "training" in content:
-
+      print(content)
       # puts a label to that particular mail
       # gmail.users().threads().modify(userId="me", id=mail["id"], body={"addLabelIds": ["Label_1"]}).execute()
 
@@ -85,14 +86,18 @@ def test_api_request():
       rawData = gmail.users().threads().get(userId="me", id=mail["id"]).execute()
       
       for mId in rawData["messages"]:
-        rawMessage = gmail.users().messages().get(userId="me", id=mId["id"], format="raw").execute()
-        resInsert = gmail1.users().messages().insert(
-          userId="me", 
-          body={
-            "id":mId["id"],
-            "labelIds":["INBOX"],
-            "raw":rawMessage["raw"]
-          }).execute()
+        # rawMessage = gmail.users().messages().get(userId="me", id=mId["id"], format="raw").execute()
+        rawMessage = gmail.users().messages().get(userId="me", id=mId["id"], format="metadata").execute()
+        for i in rawMessage["payload"]["headers"]:
+          if i["name"] == "Message-ID":
+            print(i["value"])
+        # gmail1.users().messages().insert(
+        #   userId="me", 
+        #   body={
+        #     "id":mId["id"],
+        #     # "labelIds":["INBOX"],
+        #     "raw":rawMessage["raw"]
+        #   }).execute()
 
   return flask.jsonify(**files)
   '''
@@ -128,8 +133,58 @@ def authorize():
 
   # Store the state so the callback can verify the auth server response.
   flask.session['state'] = state
+  # flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
+  #     'client_secret.json',
+  #     scopes=["https://www.googleapis.com/auth/gmail.readonly", "https://www.googleapis.com/auth/userinfo.profile", "https://mail.google.com/", "https://www.googleapis.com/auth/userinfo.email", "openid"],
+  #     state=state)
+  # flow.redirect_uri = flask.url_for('oauth2callback', _external=True)
+
+  # authorization_response = flask.request.url
+  # flow.fetch_token(authorization_response=authorization_response)
+
+  # # _id : str("tokens")
+
+  # # # we need to fect from db and dict(_id)
+
+  # credentials = flow.credentials
+  # flask.session['credentials'] = {
+  #     'token': credentials.token,
+  #     'refresh_token': credentials.refresh_token,
+  #     'token_uri': credentials.token_uri,
+  #     'client_id': credentials.client_id,
+  #     'client_secret': credentials.client_secret,
+  #     'scopes': credentials.scopes}
+  
 
   return flask.redirect(authorization_url)
+
+
+# state = flask.session['state']
+# flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
+#     'client_secret.json',
+#     scopes=['https://www.googleapis.com/auth/drive.metadata.readonly'],
+#     state=state)
+# flow.redirect_uri = flask.url_for('oauth2callback', _external=True)
+
+# authorization_response = flask.request.url
+# flow.fetch_token(authorization_response=authorization_response)
+
+# # Store the credentials in the session.
+# # ACTION ITEM for developers:
+# #     Store user's access and refresh tokens in your data store if
+# #     incorporating this code into your real app.
+# credentials = flow.credentials
+# flask.session['credentials'] = {
+#     'token': credentials.token,
+#     'refresh_token': credentials.refresh_token,
+#     'token_uri': credentials.token_uri,
+#     'client_id': credentials.client_id,
+#     'client_secret': credentials.client_secret,
+#     'scopes': credentials.scopes}
+
+
+
+
 
 
 @app.route('/oauth2callback')
