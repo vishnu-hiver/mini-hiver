@@ -201,21 +201,6 @@ def authorize():
 #     'scopes': credentials.scopes}
 
 
-def insert_creds():
-    curr = ctx.cursor()
-    client_secret = json.load(open('client_secret.json'))
-    user_info = json.dumps(client_secret)
-    sql = f"insert into user_info values('{user_info}')"
-    curr.execute(sql)
-    ctx.commit()
-
-def read_creds():
-    curr = ctx.cursor()
-    curr.execute("select * from user_info;")
-    print(curr.fetchall())
-
-
-
 @app.route('/oauth2callback')
 def oauth2callback():
   # Specify the state when creating the flow in the callback so that it can
