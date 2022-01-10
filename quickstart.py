@@ -5,6 +5,9 @@ import requests
 import snowflake.connector
 import json
 
+import database_sf as db
+import pandas as pd
+
 import google.oauth2.credentials
 import google_auth_oauthlib.flow
 import googleapiclient.discovery
@@ -50,7 +53,7 @@ def refreshToken(client_id, client_secret, refresh_token):
 
 emails = ["sathvik.s@grexit.com", "vani.g@grexit.com","vishnuerapalli01@gmail.com","sathviksaya@gmail.com"]
 
-sath_token={'client_id': '1036067471598-mqt6v2j085vve462skcl1pbj80d9055e.apps.googleusercontent.com', 'client_secret': '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', 'refresh_token': None, 'scopes': ['https://www.googleapis.com/auth/gmail.readonly', 'https://www.googleapis.com/auth/userinfo.profile', 'https://mail.google.com/', 'https://www.googleapis.com/auth/userinfo.email', 'openid'], 'token': 'ya29.a0ARrdaM-PSvRk5uNZrwEoCoJgSPr1MNxiMBdjE9uHUCnw4kko6R_iyl-Omn1v3Hxx-AvfUm8JDTGsNs7ZsDt9ax03kEHEVdNKN55QcA3qHceQILwV3f0_reA5swd2S_H66nISwiNOOsdZVIg9MeLCndHbDsAoRw', 'token_uri': 'https://oauth2.googleapis.com/token'}
+# sath_token={'client_id': '1036067471598-mqt6v2j085vve462skcl1pbj80d9055e.apps.googleusercontent.com', 'client_secret': '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', 'refresh_token': None, 'scopes': ['https://www.googleapis.com/auth/gmail.readonly', 'https://www.googleapis.com/auth/userinfo.profile', 'https://mail.google.com/', 'https://www.googleapis.com/auth/userinfo.email', 'openid'], 'token': 'ya29.a0ARrdaM-PSvRk5uNZrwEoCoJgSPr1MNxiMBdjE9uHUCnw4kko6R_iyl-Omn1v3Hxx-AvfUm8JDTGsNs7ZsDt9ax03kEHEVdNKN55QcA3qHceQILwV3f0_reA5swd2S_H66nISwiNOOsdZVIg9MeLCndHbDsAoRw', 'token_uri': 'https://oauth2.googleapis.com/token'}
 @app.route('/')
 def index():
   return render_template("login.html")
@@ -62,13 +65,17 @@ def test_api_request():
     return flask.redirect('authorize')
 
   # Load credentials from the session.
+  creds = flask.session['credentials']
   credentials = google.oauth2.credentials.Credentials(
-      **flask.session['credentials'])
+      **creds)
+  # db.insert_creds(creds)
   gmail = googleapiclient.discovery.build(
       "gmail", "v1", credentials=credentials)
+
+  print(pd.DataFrame(db.read_creds()).drop_duplicates())
   
-  credentials1 = google.oauth2.credentials.Credentials(**sath_token)
-  gmail1 = googleapiclient.discovery.build("gmail", "v1", credentials=credentials1)
+  # credentials1 = google.oauth2.credentials.Credentials(**sath_token)
+  # gmail1 = googleapiclient.discovery.build("gmail", "v1", credentials=credentials1)
 
   files = gmail.users().threads().list(userId='me').execute()
   # files1 = gmail1.users().threads().list(userId='me').execute()
@@ -89,7 +96,7 @@ def test_api_request():
   for mail in resMails["threads"]:
     content = (mail["snippet"]).lower()
     if "training" in content:
-      print(content)
+      # print(content)
       # puts a label to that particular mail
       # gmail.users().threads().modify(userId="me", id=mail["id"], body={"addLabelIds": ["Label_1"]}).execute()
 
@@ -99,9 +106,9 @@ def test_api_request():
       for mId in rawData["messages"]:
         # rawMessage = gmail.users().messages().get(userId="me", id=mId["id"], format="raw").execute()
         rawMessage = gmail.users().messages().get(userId="me", id=mId["id"], format="metadata").execute()
-        for i in rawMessage["payload"]["headers"]:
-          if i["name"] == "Message-ID":
-            print(i["value"])
+        # for i in rawMessage["payload"]["headers"]:
+        #   if i["name"] == "Message-ID":
+        #     print(i["value"])
         # gmail1.users().messages().insert(
         #   userId="me", 
         #   body={

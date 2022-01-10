@@ -8,10 +8,10 @@ ctx = snowflake.connector.connect(
     database='CREDENTIALS'
 )
 
-def insert_creds():
+def insert_creds(tokens):
     curr = ctx.cursor()
-    client_secret = json.load(open('client_secret.json'))
-    user_info = json.dumps(client_secret)
+    id = tokens["client_id"]
+    user_info = json.dumps(tokens)
     sql = f"insert into user_info values('{user_info}')"
     curr.execute(sql)
     ctx.commit()
@@ -19,4 +19,4 @@ def insert_creds():
 def read_creds():
     curr = ctx.cursor()
     curr.execute("select * from user_info;")
-    print(curr.fetchall())
+    return curr.fetchall()
