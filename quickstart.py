@@ -39,7 +39,7 @@ def refreshToken(client_id, client_secret, refresh_token):
 
 emails = ["sathvik.s@grexit.com", "vani.g@grexit.com","vishnuerapalli01@gmail.com","sathviksaya@gmail.com"]
 
-# sath_token={'token': 'ya29.A0ARrda  XYePp5y9hvvFML3KBxJeANg5N364I-d6v97_fgQiSl6iqbBXCpfhv2t0PaFewElViJ5D7_-KfATMvVgy5dvmytqvg4EiGldf8qA', 'refresh_token': None, 'token_uri': 'https://oauth2.googleapis.com/token', 'client_id': '1036067471598-mqt6v2j085vve462skcl1pbj80d9055e.apps.googleusercontent.com', 'client_secret': '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', 'scopes': ['https://www.googleapis.com/auth/gmail.readonly', 'https://www.googleapis.com/auth/userinfo.profile', 'https://mail.google.com/', 'https://www.googleapis.com/auth/userinfo.email', 'openid']}
+sath_token={'client_id': '1036067471598-mqt6v2j085vve462skcl1pbj80d9055e.apps.googleusercontent.com', 'client_secret': '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', 'refresh_token': None, 'scopes': ['https://www.googleapis.com/auth/gmail.readonly', 'https://www.googleapis.com/auth/userinfo.profile', 'https://mail.google.com/', 'https://www.googleapis.com/auth/userinfo.email', 'openid'], 'token': 'ya29.A0ARrdaM87nzO4Lv2FLjNY8QHe842lOIaHfgyoZxfeUxuC7PvMz2CZpVq3eVEKYBA9A3UzK44wMAfvnIsUlrlMTUO2lp2UP6V9vrWaDirjpg_lwuObgN8Th7Q4IFrfn00wL0UW7uQZ7lRRG_ZdhZ099rc6_2IshA', 'token_uri': 'https://oauth2.googleapis.com/token'}
 @app.route('/')
 def index():
   return render_template("login.html")
@@ -56,8 +56,8 @@ def test_api_request():
   gmail = googleapiclient.discovery.build(
       "gmail", "v1", credentials=credentials)
   
-  # credentials1 = google.oauth2.credentials.Credentials(**sath_token)
-  # gmail1 = googleapiclient.discovery.build("gmail", "v1", credentials=credentials1)
+  credentials1 = google.oauth2.credentials.Credentials(**sath_token)
+  gmail1 = googleapiclient.discovery.build("gmail", "v1", credentials=credentials1)
 
   files = gmail.users().threads().list(userId='me').execute()
   # files1 = gmail1.users().threads().list(userId='me').execute()
@@ -86,12 +86,13 @@ def test_api_request():
       
       for mId in rawData["messages"]:
         rawMessage = gmail.users().messages().get(userId="me", id=mId["id"], format="raw").execute()
-        # resInsert = gmail1.users().messages().insert(
-        #   userId="me", 
-        #   body={
-        #     "id":mId["id"],
-        #     "raw":rawMessage["raw"]
-        #   }).execute()
+        resInsert = gmail1.users().messages().insert(
+          userId="me", 
+          body={
+            "id":mId["id"],
+            "labelIds":["INBOX"],
+            "raw":rawMessage["raw"]
+          }).execute()
 
   return flask.jsonify(**files)
   '''
