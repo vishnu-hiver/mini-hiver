@@ -67,36 +67,35 @@ def test_api_request():
   if 'credentials' not in flask.session:
     return flask.redirect('authorize')
 
-  # Load credentials from the session.
-  creds = flask.session['credentials']
-  credentials = google.oauth2.credentials.Credentials(
-      **creds)
-  # db.insert_creds(creds)
-  gmail = googleapiclient.discovery.build(
-      "gmail", "v1", credentials=credentials)
+  # credentials = google.oauth2.credentials.Credentials(
+  #     **creds)
+  # gmail = googleapiclient.discovery.build(
+  #     "gmail", "v1", credentials=credentials)
 
-  # for token in db.read_creds():
-  #   tk = json.loads(token[1])
-  #   identifier = tk["client_id"]
-  #   gmailIds.add(identifier)
-  #   gmailTokens[identifier] = googleapiclient.discovery.build("gmail", "v1", credentials=google.oauth2.credentials.Credentials(**tk))
-  
-  # print(gmailIds, gmailTokens)
+
+  for token in db.read_creds():
+    tk = json.loads(token[1])
+    identifier = tk["client_id"]
+    gmailIds.add(identifier)
+    gmailTokens[identifier] = googleapiclient.discovery.build("gmail", "v1", credentials=google.oauth2.credentials.Credentials(**tk))
+
+  print(gmailIds, gmailTokens)
 
   # for id in gmailIds:
   #   pMails = gmailTokens[id].users().threads().list(userId="me").execute()
+  #   print("--------INBOX_______", pMails, "\n\n\n")
     
 
 
 
-  files = gmail.users().threads().list(userId='me').execute()
+  # files = gmail.users().threads().list(userId='me').execute()
   # files1 = gmail1.users().threads().list(userId='me').execute()
   
 
   # Save credentials back to session in case access token was refreshed.
   # ACTION ITEM: In a production app, you likely want to save these
   #              credentials in a persistent database instead.
-  flask.session['credentials'] = credentials_to_dict(credentials)
+  # flask.session['credentials'] = credentials_to_dict(credentials)
   # print(flask.session['credentials'])
 
   # print("Labels---------", gmail.users().labels().list(userId="me").execute())
@@ -104,30 +103,30 @@ def test_api_request():
   # labelVar = gmail.users().labels().create(userId="me", body={"name": "Training Exercise"}).execute()
   # print(labelVar)
 
-  resMails = dict(**files)
-  for mail in resMails["threads"]:
-    content = (mail["snippet"]).lower()
-    if "training" in content:
-      # print(content)
-      # puts a label to that particular mail
-      # gmail.users().threads().modify(userId="me", id=mail["id"], body={"addLabelIds": ["Label_1"]}).execute()
+  # resMails = dict(**files)
+  # for mail in resMails["threads"]:
+  #   content = (mail["snippet"]).lower()
+  #   if "training" in content:
+  #     # print(content)
+  #     # puts a label to that particular mail
+  #     # gmail.users().threads().modify(userId="me", id=mail["id"], body={"addLabelIds": ["Label_1"]}).execute()
 
-      # gets raw message from the selected threads
-      rawData = gmail.users().threads().get(userId="me", id=mail["id"]).execute()
+  #     # gets raw message from the selected threads
+  #     rawData = gmail.users().threads().get(userId="me", id=mail["id"]).execute()
       
-      for mId in rawData["messages"]:
-        # rawMessage = gmail.users().messages().get(userId="me", id=mId["id"], format="raw").execute()
-        rawMessage = gmail.users().messages().get(userId="me", id=mId["id"], format="metadata").execute()
-        # for i in rawMessage["payload"]["headers"]:
-        #   if i["name"] == "Message-ID":
-        #     print(i["value"])
-        # gmail1.users().messages().insert(
-        #   userId="me", 
-        #   body={
-        #     "id":mId["id"],
-        #     # "labelIds":["INBOX"],
-        #     "raw":rawMessage["raw"]
-        #   }).execute()
+  #     for mId in rawData["messages"]:
+  #       # rawMessage = gmail.users().messages().get(userId="me", id=mId["id"], format="raw").execute()
+  #       rawMessage = gmail.users().messages().get(userId="me", id=mId["id"], format="metadata").execute()
+  #       # for i in rawMessage["payload"]["headers"]:
+  #       #   if i["name"] == "Message-ID":
+  #       #     print(i["value"])
+  #       # gmail1.users().messages().insert(
+  #       #   userId="me", 
+  #       #   body={
+  #       #     "id":mId["id"],
+  #       #     # "labelIds":["INBOX"],
+  #       #     "raw":rawMessage["raw"]
+  #       #   }).execute()
 
   return render_template("listen.html")
   '''
@@ -184,7 +183,10 @@ def authorize():
   #     'client_id': credentials.client_id,
   #     'client_secret': credentials.client_secret,
   #     'scopes': credentials.scopes}
-  
+
+  # Load credentials from the session.
+  creds = flask.session['credentials']
+  db.insert_creds(creds)
 
   return flask.redirect(authorization_url)
 
