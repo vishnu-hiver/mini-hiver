@@ -26,15 +26,6 @@ SCOPES = ["https://www.googleapis.com/auth/gmail.readonly", "https://www.googlea
 API_SERVICE_NAME = 'gmail'
 API_VERSION = 'v1'
 
-# ------- Snowflake credentials -------- #
-ctx = snowflake.connector.connect(
-    user='vanigupta69',
-    password='Vanigupta@123',
-    account='tw24335.us-central1.gcp',
-    database='CREDENTIALS'
-)
-
-
 app = flask.Flask(__name__)
 # Note: A secret key is included in the sample so that it works.
 # If you use this code in your application, replace this with a truly secret
@@ -79,11 +70,11 @@ def test_api_request():
     gmailIds.add(identifier)
     gmailTokens[identifier] = googleapiclient.discovery.build("gmail", "v1", credentials=google.oauth2.credentials.Credentials(**tk))
 
-  print(gmailIds, gmailTokens)
+  # print(gmailIds, gmailTokens)
 
-  for id in gmailIds:
-    pMails = gmailTokens[id].users().threads().list(userId="me").execute()
-    print("--------INBOX_______", pMails, "\n\n\n")
+  # for id in gmailIds:
+  #   pMails = gmailTokens[id].users().threads().list(userId="me").execute()
+  #   print("--------INBOX_______", pMails, "\n\n\n")
     
 
 
@@ -129,13 +120,6 @@ def test_api_request():
   #       #   }).execute()
 
   return render_template("listen.html")
-  '''
-  for message in resDictionary["messages"]:
-    print(message.id)'''
-  
-  return resDictionary
-  
-  #flask.jsonify(**files) -->json
   
 
 
@@ -162,31 +146,6 @@ def authorize():
 
   # Store the state so the callback can verify the auth server response.
   flask.session['state'] = state
-  # flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
-  #     'client_secret.json',
-  #     scopes=["https://www.googleapis.com/auth/gmail.readonly", "https://www.googleapis.com/auth/userinfo.profile", "https://mail.google.com/", "https://www.googleapis.com/auth/userinfo.email", "openid"],
-  #     state=state)
-  # flow.redirect_uri = flask.url_for('oauth2callback', _external=True)
-
-  # authorization_response = flask.request.url
-  # flow.fetch_token(authorization_response=authorization_response)
-
-  # # _id : str("tokens")
-
-  # # # we need to fect from db and dict(_id)
-
-  # credentials = flow.credentials
-  # flask.session['credentials'] = {
-  #     'token': credentials.token,
-  #     'refresh_token': credentials.refresh_token,
-  #     'token_uri': credentials.token_uri,
-  #     'client_id': credentials.client_id,
-  #     'client_secret': credentials.client_secret,
-  #     'scopes': credentials.scopes}
-
-  # Load credentials from the session.
-  creds = flask.session['credentials']
-  db.insert_creds(creds)
 
   return flask.redirect(authorization_url)
 
@@ -234,6 +193,10 @@ def oauth2callback():
   #              credentials in a persistent database instead.
   credentials = flow.credentials
   flask.session['credentials'] = credentials_to_dict(credentials)
+
+  creds = flask.session['credentials'] 
+  print("---------------->", creds)
+  db.insert_creds(creds)
 
   return flask.redirect(flask.url_for('test_api_request'))
 

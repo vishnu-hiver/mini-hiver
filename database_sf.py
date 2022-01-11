@@ -10,7 +10,7 @@ ctx = snowflake.connector.connect(
 
 def insert_creds(tokens):
     curr = ctx.cursor()
-    id = tokens["client_id"]
+    id = tokens["token"]
     user_info = json.dumps(tokens)
 
     # finding if the id exists in db table
