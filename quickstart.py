@@ -81,9 +81,9 @@ def test_api_request():
 
   print(gmailIds, gmailTokens)
 
-  # for id in gmailIds:
-  #   pMails = gmailTokens[id].users().threads().list(userId="me").execute()
-  #   print("--------INBOX_______", pMails, "\n\n\n")
+  for id in gmailIds:
+    pMails = gmailTokens[id].users().threads().list(userId="me").execute()
+    print("--------INBOX_______", pMails, "\n\n\n")
     
 
 
