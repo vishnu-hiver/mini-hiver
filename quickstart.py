@@ -65,53 +65,33 @@ def test_api_request():
     gmailIds.add(identifier)
     gmailTokens[identifier] = googleapiclient.discovery.build("gmail", "v1", credentials=google.oauth2.credentials.Credentials(**tk))
 
-  # for id in gmailIds:
-  #   pMails = gmailTokens[id].users().threads().list(userId="me").execute()
-  #   print("--------INBOX_______", pMails, "\n\n\n")
-    
-
-
-
-  # files = gmail.users().threads().list(userId='me').execute()
-  # files1 = gmail1.users().threads().list(userId='me').execute()
-  
-
-  # Save credentials back to session in case access token was refreshed.
-  # ACTION ITEM: In a production app, you likely want to save these
-  #              credentials in a persistent database instead.
-  # flask.session['credentials'] = credentials_to_dict(credentials)
-  # print(flask.session['credentials'])
-
-  # print("Labels---------", gmail.users().labels().list(userId="me").execute())
-
-  # labelVar = gmail.users().labels().create(userId="me", body={"name": "Training Exercise"}).execute()
-  # print(labelVar)
-
-  # resMails = dict(**files)
-  # for mail in resMails["threads"]:
-  #   content = (mail["snippet"]).lower()
-  #   if "training" in content:
-  #     # print(content)
-  #     # puts a label to that particular mail
-  #     # gmail.users().threads().modify(userId="me", id=mail["id"], body={"addLabelIds": ["Label_1"]}).execute()
-
-  #     # gets raw message from the selected threads
-  #     rawData = gmail.users().threads().get(userId="me", id=mail["id"]).execute()
-      
-  #     for mId in rawData["messages"]:
-  #       # rawMessage = gmail.users().messages().get(userId="me", id=mId["id"], format="raw").execute()
-  #       rawMessage = gmail.users().messages().get(userId="me", id=mId["id"], format="metadata").execute()
-  #       # for i in rawMessage["payload"]["headers"]:
-  #       #   if i["name"] == "Message-ID":
-  #       #     print(i["value"])
-  #       # gmail1.users().messages().insert(
-  #       #   userId="me", 
-  #       #   body={
-  #       #     "id":mId["id"],
-  #       #     # "labelIds":["INBOX"],
-  #       #     "raw":rawMessage["raw"]
-  #       #   }).execute()
-
+  for id in gmailIds:
+    gmailInstance = gmailTokens[id]
+    pInbox = gmailInstance.users().threads().list(userId="me").execute()
+    for eachMessage in pInbox["threads"]:
+      if "training" in (eachMessage["snippet"]).lower():
+        rawMessage = gmailInstance.users().messages().get(userId="me", id=eachMessage["id"], format="raw").execute()
+        metadataMessage = gmailInstance.users().messages().get(userId="me", id=eachMessage["id"], format="metadata").execute()
+        for i in metadataMessage["payload"]["headers"]:
+          if i["name"] == "Message-ID":
+            messageId = i["value"]
+            for id2 in gmailIds:
+              if id != id2:
+                gmailInstance2 = gmailTokens[id2]
+                metadataIdList = list()
+                pInbox2 = gmailInstance2.users.threads.list(userId="me").execute()
+                for eachMessage2 in pInbox2["threads"]:
+                  metadataMessage2 = gmailInstance.users().messages().get(userId="me", id=eachMessage2["id"], format="metadata").execute()
+                  for i2 in metadataMessage2["payload"]["headers"]:
+                    if i2["name"] == "Message-ID":
+                      metadataIdList.append(i2["value"])
+                  if messageId not in metadataIdList:
+                    gmailInstance2.users().messages().insert(
+                      userId="me", 
+                      body={
+                        "id":eachMessage["id"],
+                        "raw":rawMessage["raw"]
+                      }).execute()
   return render_template("listen.html")
   
 
@@ -164,7 +144,6 @@ def oauth2callback():
   flask.session['credentials'] = credentials_to_dict(credentials)
 
   creds = flask.session['credentials']
-  
   myUser = googleapiclient.discovery.build("gmail", "v1", credentials=google.oauth2.credentials.Credentials(**creds)) 
   myUserProfile = myUser.users().getProfile(userId="me").execute()
   # newToken = refreshToken(creds["client_id"], creds["client_secret"], "1//0gOsi5EfANKybCgYIARAAGBASNwF-L9IrerBuDng4-8S2rQfhXIPsU5SHUovykmhwC-RJ1Y5aSKP6K0qtCLX0J_Lylx4EGYIc5-Y")
