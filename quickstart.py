@@ -2,7 +2,6 @@ import os
 import flask
 from flask import render_template
 import requests
-import snowflake.connector
 import json
 
 import database_sf as db
@@ -42,6 +41,7 @@ def refreshToken(client_id, client_secret, refresh_token):
   authorization_url = "https://www.googleapis.com/oauth2/v4/token"
   r = requests.post(authorization_url, data=params)
   if r.ok:
+    print("----------------_>>>>>>>>>>", r.json())
     return r.json()['access_token']
   else:
     return None
@@ -55,22 +55,15 @@ def index():
 
 @app.route('/listen')
 def test_api_request():
+
   if 'credentials' not in flask.session:
     return flask.redirect('authorize')
 
-  # credentials = google.oauth2.credentials.Credentials(
-  #     **creds)
-  # gmail = googleapiclient.discovery.build(
-  #     "gmail", "v1", credentials=credentials)
-
-
   for token in db.read_creds():
     tk = json.loads(token[1])
-    identifier = tk["client_id"]
+    identifier = tk["token"]
     gmailIds.add(identifier)
     gmailTokens[identifier] = googleapiclient.discovery.build("gmail", "v1", credentials=google.oauth2.credentials.Credentials(**tk))
-
-  # print(gmailIds, gmailTokens)
 
   # for id in gmailIds:
   #   pMails = gmailTokens[id].users().threads().list(userId="me").execute()
@@ -150,30 +143,6 @@ def authorize():
   return flask.redirect(authorization_url)
 
 
-# state = flask.session['state']
-# flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
-#     'client_secret.json',
-#     scopes=['https://www.googleapis.com/auth/drive.metadata.readonly'],
-#     state=state)
-# flow.redirect_uri = flask.url_for('oauth2callback', _external=True)
-
-# authorization_response = flask.request.url
-# flow.fetch_token(authorization_response=authorization_response)
-
-# # Store the credentials in the session.
-# # ACTION ITEM for developers:
-# #     Store user's access and refresh tokens in your data store if
-# #     incorporating this code into your real app.
-# credentials = flow.credentials
-# flask.session['credentials'] = {
-#     'token': credentials.token,
-#     'refresh_token': credentials.refresh_token,
-#     'token_uri': credentials.token_uri,
-#     'client_id': credentials.client_id,
-#     'client_secret': credentials.client_secret,
-#     'scopes': credentials.scopes}
-
-
 @app.route('/oauth2callback')
 def oauth2callback():
   # Specify the state when creating the flow in the callback so that it can
@@ -194,9 +163,12 @@ def oauth2callback():
   credentials = flow.credentials
   flask.session['credentials'] = credentials_to_dict(credentials)
 
-  creds = flask.session['credentials'] 
-  print("---------------->", creds)
-  db.insert_creds(creds)
+  creds = flask.session['credentials']
+  
+  myUser = googleapiclient.discovery.build("gmail", "v1", credentials=google.oauth2.credentials.Credentials(**creds)) 
+  myUserProfile = myUser.users().getProfile(userId="me").execute()
+  # newToken = refreshToken(creds["client_id"], creds["client_secret"], "1//0gOsi5EfANKybCgYIARAAGBASNwF-L9IrerBuDng4-8S2rQfhXIPsU5SHUovykmhwC-RJ1Y5aSKP6K0qtCLX0J_Lylx4EGYIc5-Y")
+  db.insert_creds(creds, myUserProfile["emailAddress"])
 
   return flask.redirect(flask.url_for('test_api_request'))
 
