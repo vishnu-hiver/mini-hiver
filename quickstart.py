@@ -10,6 +10,7 @@ import pandas as pd
 import google.oauth2.credentials
 import google_auth_oauthlib.flow
 import googleapiclient.discovery
+from google.cloud import pubsub_v1
 
 
 # This variable specifies the name of a file that contains the OAuth 2.0
@@ -47,6 +48,8 @@ def refreshToken(client_id, client_secret, refresh_token):
     return None
 
 
+
+
 # Home route to login
 @app.route('/')
 def index():
@@ -65,33 +68,46 @@ def test_api_request():
     gmailIds.add(identifier)
     gmailTokens[identifier] = googleapiclient.discovery.build("gmail", "v1", credentials=google.oauth2.credentials.Credentials(**tk))
 
+  # print(gmailIds, gmailTokens)
+
   for id in gmailIds:
     gmailInstance = gmailTokens[id]
-    pInbox = gmailInstance.users().threads().list(userId="me").execute()
-    for eachMessage in pInbox["threads"]:
-      if "training" in (eachMessage["snippet"]).lower():
-        rawMessage = gmailInstance.users().messages().get(userId="me", id=eachMessage["id"], format="raw").execute()
-        metadataMessage = gmailInstance.users().messages().get(userId="me", id=eachMessage["id"], format="metadata").execute()
-        for i in metadataMessage["payload"]["headers"]:
-          if i["name"] == "Message-ID":
-            messageId = i["value"]
-            for id2 in gmailIds:
-              if id != id2:
-                gmailInstance2 = gmailTokens[id2]
-                metadataIdList = list()
-                pInbox2 = gmailInstance2.users.threads.list(userId="me").execute()
-                for eachMessage2 in pInbox2["threads"]:
-                  metadataMessage2 = gmailInstance.users().messages().get(userId="me", id=eachMessage2["id"], format="metadata").execute()
-                  for i2 in metadataMessage2["payload"]["headers"]:
-                    if i2["name"] == "Message-ID":
-                      metadataIdList.append(i2["value"])
-                  if messageId not in metadataIdList:
-                    gmailInstance2.users().messages().insert(
-                      userId="me", 
-                      body={
-                        "id":eachMessage["id"],
-                        "raw":rawMessage["raw"]
-                      }).execute()
+    # res = gmailInstance.users().getProfile(userId="me").execute()
+    res = gmailInstance.users().watch(userId="me", body={"topicName":"projects/firstassignment-337311/topics/training"}).execute()
+    print("-----------.>>>>>>>>>>>>", res)
+
+
+  # for id in gmailIds:
+  #   gmailInstance = gmailTokens[id]
+  #   pInbox = gmailInstance.users().threads().list(userId="me").execute()
+  #   for eachMessage in pInbox["threads"]:
+  #     if "training" in (eachMessage["snippet"]).lower():
+  #       metadataMessage = gmailInstance.users().messages().get(userId="me", id=eachMessage["id"], format="metadata").execute()
+  #       for i in metadataMessage["payload"]["headers"]:
+  #         if i["name"] == "Message-ID":
+  #           messageId = i["value"]
+  #           rawMessage = gmailInstance.users().messages().get(userId="me", id=eachMessage["id"], format="raw").execute()
+  #           for id2 in gmailIds:
+  #             if id != id2:
+  #               gmailInstance2 = gmailTokens[id2]
+  #               metadataIdList = list()
+  #               # print(gmailInstance2.users().labels().list(userId="me").execute()["labels"])
+  #               # labelId = gmailInstance2.users().labels().create(userId="me",body={"name":"Training Exercise"}).execute()
+  #               pInbox2 = gmailInstance2.users().threads().list(userId="me").execute()
+  #               for eachMessage2 in pInbox2["threads"]:
+  #                 metadataMessage2 = gmailInstance2.users().messages().get(userId="me", id=eachMessage2["id"], format="metadata").execute()
+  #                 for i2 in metadataMessage2["payload"]["headers"]:
+  #                   if i2["name"] == "Message-ID":
+  #                     metadataIdList.append(i2["value"])
+  #                 if messageId not in metadataIdList:
+  #                   gmailInstance2.users().messages().insert(
+  #                     userId="me", 
+  #                     body={
+  #                       "id":eachMessage["id"],
+  #                       # "labelIds": [labelId["id"]],
+  #                       "labelIds": ["Label_1"],
+  #                       "raw":rawMessage["raw"]
+  #                     }).execute()
   return render_template("listen.html")
   
 
