@@ -27,7 +27,7 @@ def read_creds():
     curr.execute("select * from user_info;")
     return curr.fetchall()
 
-def insert_history_id(id, historyId = "12345"):
+def insert_history_id(id, historyId):
     curr = ctx.cursor()
     sql = f"update user_info set history_id='{historyId}' where client_id='{id}';"
     curr.execute(sql)

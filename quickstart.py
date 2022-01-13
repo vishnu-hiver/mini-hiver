@@ -70,7 +70,7 @@ def test_api_request():
 
   for id in gmailIds:
     gmailInstance = gmailTokens[id]
-    # res = gmailInstance.users().watch(userId="me", body={"topicName":"projects/firstassignment-337311/topics/training"}).execute()
+    # watchRes = gmailInstance.users().watch(userId="me", body={"topicName":"projects/firstassignment-337311/topics/training"}).execute()
     # print("---------------------------------------->>>>", res)
     emailId = gmailInstance.users().getProfile(userId="me").execute()
     hisId = db.read_history_id(emailId['emailAddress'])
@@ -163,6 +163,8 @@ def oauth2callback():
   myUserProfile = myUser.users().getProfile(userId="me").execute()
   # newToken = refreshToken(creds["client_id"], creds["client_secret"], "1//0gOsi5EfANKybCgYIARAAGBASNwF-L9IrerBuDng4-8S2rQfhXIPsU5SHUovykmhwC-RJ1Y5aSKP6K0qtCLX0J_Lylx4EGYIc5-Y")
   db.insert_creds(creds, myUserProfile["emailAddress"])
+  watchRes = myUser.users().watch(userId="me", body={"topicName":"projects/firstassignment-337311/topics/training"}).execute()
+  db.insert_history_id(myUserProfile["emailAddress"], watchRes["historyId"])
 
   return flask.redirect(flask.url_for('test_api_request'))
 
