@@ -72,13 +72,36 @@ def test_api_request():
 
   for id in gmailIds:
     gmailInstance = gmailTokens[id]
-    res = gmailInstance.users().watch(userId="me", body={"topicName":"projects/firstassignment-337311/topics/training"}).execute()
+    # res = gmailInstance.users().watch(userId="me", body={"topicName":"projects/firstassignment-337311/topics/training"}).execute()
     # print("---------------------------------------->>>>", res)
-    res1 = gmailInstance.users().history().list(userId="me", historyTypes="messageAdded", labelId="INBOX", startHistoryId="31978").execute()
-    # res1 = gmailInstance.users().history().list(userId="me", historyTypes="messageAdded", labelId="INBOX", startHistoryId=res["historyId"]).execute()
-    for res2 in res1:
-      print(res2, "-----------.>>>>>>>>>>>>", res1[res2])
-
+    emailId = gmailInstance.users().getProfile(userId="me").execute()
+    hisId = db.read_history_id(emailId['emailAddress'])
+    res = gmailInstance.users().history().list(userId="me", historyTypes="messageAdded", labelId="INBOX", startHistoryId="31734").execute()
+    if len(res) > 1:
+      for mes in res["history"]:
+        mesId = mes["messagesAdded"][0]["message"]["id"]
+        response = gmailInstance.users().messages().get(userId="me", id=mesId, format="metadata").execute()
+        subject = ""
+        globalId = ""
+        for field in response["payload"]["headers"]:
+          if field["name"] == "Subject":
+            subject = field["value"]
+            break
+          # if field["name"] == "Message-ID":
+          #   globalId = field["value"]
+        if "training" in subject.lower():
+          rawMessage = gmailInstance.users().messages().get(userId="me", id=mesId, format="raw").execute()
+          for id2 in gmailIds:
+            if id2 != id:
+              gmailInstance2 = gmailTokens[id2]
+              gmailInstance2.users().messages().insert(
+                userId="me", 
+                body={
+                  "id":mesId,
+                  "labelIds": ["INBOX"],
+                  "raw":rawMessage["raw"]
+                }).execute()
+    db.insert_history_id(emailId["emailAddress"], res["historyId"])
 
   # for id in gmailIds:
   #   gmailInstance = gmailTokens[id]

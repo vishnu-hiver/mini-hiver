@@ -8,8 +8,6 @@ ctx = snowflake.connector.connect(
     database='CREDENTIALS'
 )
 
-historyId = 12345
-
 def insert_creds(tokens, id):
     curr = ctx.cursor()
     user_info = json.dumps(tokens)
@@ -18,7 +16,7 @@ def insert_creds(tokens, id):
     curr.execute(pk_bool)
     pk_bool = curr.fetchall()
     if len(pk_bool) == 0:
-        sql = f"insert into user_info values('{id}','{user_info}', '{historyId}');"
+        sql = f"insert into user_info values('{id}','{user_info}', '12345');"
     else:
         sql = f"update user_info set user_cred='{user_info}' where client_id='{id}';"
     curr.execute(sql)
@@ -29,7 +27,7 @@ def read_creds():
     curr.execute("select * from user_info;")
     return curr.fetchall()
 
-def insert_history_id(id, historyId = 12345):
+def insert_history_id(id, historyId = "12345"):
     curr = ctx.cursor()
     sql = f"update user_info set history_id='{historyId}' where client_id='{id}';"
     curr.execute(sql)
@@ -37,5 +35,5 @@ def insert_history_id(id, historyId = 12345):
 
 def read_history_id(id):
     curr = ctx.cursor()
-    curr.execute("select * from user_info where client_id='{id}';")
-    return curr.fetchall()
+    curr.execute(f"select history_id from user_info where client_id='{id}';")
+    return curr.fetchall()[0][0]
