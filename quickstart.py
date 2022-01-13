@@ -72,9 +72,12 @@ def test_api_request():
 
   for id in gmailIds:
     gmailInstance = gmailTokens[id]
-    # res = gmailInstance.users().getProfile(userId="me").execute()
     res = gmailInstance.users().watch(userId="me", body={"topicName":"projects/firstassignment-337311/topics/training"}).execute()
-    print("-----------.>>>>>>>>>>>>", res)
+    # print("---------------------------------------->>>>", res)
+    res1 = gmailInstance.users().history().list(userId="me", historyTypes="messageAdded", labelId="INBOX", startHistoryId="31978").execute()
+    # res1 = gmailInstance.users().history().list(userId="me", historyTypes="messageAdded", labelId="INBOX", startHistoryId=res["historyId"]).execute()
+    for res2 in res1:
+      print(res2, "-----------.>>>>>>>>>>>>", res1[res2])
 
 
   # for id in gmailIds:

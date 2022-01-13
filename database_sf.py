@@ -26,3 +26,14 @@ def read_creds():
     curr = ctx.cursor()
     curr.execute("select * from user_info;")
     return curr.fetchall()
+
+# def insert_history_id(id):
+#     curr = ctx.cursor()
+#     sql = f"insert into history_id values('{id}');"
+#     curr.execute(sql)
+#     ctx.commit()
+
+# def read_history_id():
+#     curr = ctx.cursor()
+#     curr.execute("select * from history_id;")
+#     return curr.fetchall()
