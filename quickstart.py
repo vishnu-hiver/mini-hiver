@@ -68,16 +68,14 @@ def test_api_request():
     gmailIds.add(identifier)
     gmailTokens[identifier] = googleapiclient.discovery.build("gmail", "v1", credentials=google.oauth2.credentials.Credentials(**tk))
 
-  # print(gmailIds, gmailTokens)
-
   for id in gmailIds:
     gmailInstance = gmailTokens[id]
     # res = gmailInstance.users().watch(userId="me", body={"topicName":"projects/firstassignment-337311/topics/training"}).execute()
     # print("---------------------------------------->>>>", res)
     emailId = gmailInstance.users().getProfile(userId="me").execute()
     hisId = db.read_history_id(emailId['emailAddress'])
-    res = gmailInstance.users().history().list(userId="me", historyTypes="messageAdded", labelId="INBOX", startHistoryId="31734").execute()
-    if len(res) > 1:
+    res = gmailInstance.users().history().list(userId="me", historyTypes="messageAdded", labelId="INBOX", startHistoryId=hisId).execute()
+    if "history" in res.keys():
       for mes in res["history"]:
         mesId = mes["messagesAdded"][0]["message"]["id"]
         response = gmailInstance.users().messages().get(userId="me", id=mesId, format="metadata").execute()
@@ -86,54 +84,29 @@ def test_api_request():
         for field in response["payload"]["headers"]:
           if field["name"] == "Subject":
             subject = field["value"]
-            break
-          # if field["name"] == "Message-ID":
-          #   globalId = field["value"]
-        if "training" in subject.lower():
+          if field["name"] == "Message-ID":
+            globalId = field["value"]
+        if "peaches" in subject.lower():
           rawMessage = gmailInstance.users().messages().get(userId="me", id=mesId, format="raw").execute()
           for id2 in gmailIds:
             if id2 != id:
               gmailInstance2 = gmailTokens[id2]
-              gmailInstance2.users().messages().insert(
-                userId="me", 
-                body={
-                  "id":mesId,
-                  "labelIds": ["INBOX"],
-                  "raw":rawMessage["raw"]
-                }).execute()
+              metadataIdList = list()
+              pInbox = gmailInstance2.users().threads().list(userId="me").execute()
+              for pMessage in pInbox["threads"]:
+                  metadataMessage2 = gmailInstance2.users().messages().get(userId="me", id=pMessage["id"], format="metadata").execute()
+                  for i2 in metadataMessage2["payload"]["headers"]:
+                    if i2["name"] == "Message-ID":
+                      metadataIdList.append(i2["value"])
+                  if globalId not in metadataIdList:
+                    gmailInstance2.users().messages().insert(
+                      userId="me", 
+                      body={
+                        "id":mesId,
+                        "labelIds": ["INBOX"],
+                        "raw":rawMessage["raw"]
+                      }).execute()
     db.insert_history_id(emailId["emailAddress"], res["historyId"])
-
-  # for id in gmailIds:
-  #   gmailInstance = gmailTokens[id]
-  #   pInbox = gmailInstance.users().threads().list(userId="me").execute()
-  #   for eachMessage in pInbox["threads"]:
-  #     if "training" in (eachMessage["snippet"]).lower():
-  #       metadataMessage = gmailInstance.users().messages().get(userId="me", id=eachMessage["id"], format="metadata").execute()
-  #       for i in metadataMessage["payload"]["headers"]:
-  #         if i["name"] == "Message-ID":
-  #           messageId = i["value"]
-  #           rawMessage = gmailInstance.users().messages().get(userId="me", id=eachMessage["id"], format="raw").execute()
-  #           for id2 in gmailIds:
-  #             if id != id2:
-  #               gmailInstance2 = gmailTokens[id2]
-  #               metadataIdList = list()
-  #               # print(gmailInstance2.users().labels().list(userId="me").execute()["labels"])
-  #               # labelId = gmailInstance2.users().labels().create(userId="me",body={"name":"Training Exercise"}).execute()
-  #               pInbox2 = gmailInstance2.users().threads().list(userId="me").execute()
-  #               for eachMessage2 in pInbox2["threads"]:
-  #                 metadataMessage2 = gmailInstance2.users().messages().get(userId="me", id=eachMessage2["id"], format="metadata").execute()
-  #                 for i2 in metadataMessage2["payload"]["headers"]:
-  #                   if i2["name"] == "Message-ID":
-  #                     metadataIdList.append(i2["value"])
-  #                 if messageId not in metadataIdList:
-  #                   gmailInstance2.users().messages().insert(
-  #                     userId="me", 
-  #                     body={
-  #                       "id":eachMessage["id"],
-  #                       # "labelIds": [labelId["id"]],
-  #                       "labelIds": ["Label_1"],
-  #                       "raw":rawMessage["raw"]
-  #                     }).execute()
   return render_template("listen.html")
   
 
