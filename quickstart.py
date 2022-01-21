@@ -48,8 +48,6 @@ def refreshToken(client_id, client_secret, refresh_token):
     return None
 
 
-
-
 # Home route to login
 @app.route('/')
 def index():
@@ -61,6 +59,7 @@ def test_api_request():
 
   if 'credentials' not in flask.session:
     return flask.redirect('authorize')
+
 
   for token in db.read_creds():
     tk = json.loads(token[1])
